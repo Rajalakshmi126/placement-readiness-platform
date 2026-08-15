@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Placement Readiness Score</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="page">
+  <header class="container navbar">
+    <a href="/pages/dashboard.html" class="brand" style="text-decoration:none;"><span class="brand-mark"></span> Placement Readiness</a>
+    <nav class="nav-links">
+      <a href="/pages/dashboard.html">Dashboard</a>
+      <span class="pill" id="nav-username">···</span>
+      <a href="#" id="logout-link">Log out</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <div class="container" style="max-width:820px;">
+      <span class="eyebrow">Step 4 of 4</span>
+      <h2>Your Placement Readiness Score</h2>
+      <div id="error" class="error-banner"></div>
+
+      <div id="loading" class="card center">
+        <p>Crunching your resume, skills and test scores...</p>
+      </div>
+
+      <div id="report" class="hidden">
+        <div class="card">
+          <div class="flex-between" style="align-items:flex-start; flex-wrap:wrap; gap:24px;">
+            <div id="gauge" class="gauge-wrap"></div>
+            <div style="flex:1; min-width:240px;">
+              <span class="eyebrow" id="role-name"></span>
+              <div class="stat-grid">
+                <div class="stat-box"><div class="label">Resume match</div><div class="value" id="stat-resume">–</div></div>
+                <div class="stat-box"><div class="label">Technical</div><div class="value" id="stat-tech">–</div></div>
+                <div class="stat-box"><div class="label">Aptitude</div><div class="value" id="stat-apt">–</div></div>
+                <div class="stat-box"><div class="label">Projects/Certs</div><div class="value" id="stat-proj">–</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-24">
+          <div class="section-head"><h2>Skill gap breakdown</h2></div>
+          <div id="skill-gap-list"></div>
+        </div>
+
+        <div class="card mt-24">
+          <div class="section-head"><h2>Recommended next steps</h2></div>
+          <div id="recommendations-list"></div>
+        </div>
+
+        <div class="hero-actions mt-24">
+          <a href="/pages/dashboard.html" class="btn btn-primary">Back to dashboard</a>
+          <a href="/pages/select-role.html" class="btn btn-ghost">Assess a different role</a>
+          <a href="/pages/job-openings.html" class="btn btn-primary">View Recommended Job Openings</a>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/gauge.js"></script>
+<script src="/js/app-nav.js"></script>
+<script>
+  const roleId = sessionStorage.getItem('prp_role_id');
+  const resumeId = sessionStorage.getItem('prp_resume_id');
+  const assessmentId = sessionStorage.getItem('prp_assessment_id');
+
+  if (!roleId || !resumeId || !assessmentId) {
+    window.location.href = '/pages/dashboard.html';
+  }
+
+  (async function loadReport() {
+    try {
+      const [report, { roles }] = await Promise.all([
+        Api.generateReport({ roleId, resumeId, assessmentId }),
+        Api.getRoles(),
+      ]);
+
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('report').classList.remove('hidden');
+
+      const role = roles.find((r) => String(r.id) === String(roleId));
+      document.getElementById('role-name').textContent = role ? role.title : 'Target role';
+
+      renderGauge(document.getElementById('gauge'), report.readinessScore, { size: 220 });
+
+      document.getElementById('stat-resume').textContent = report.breakdown.resumeMatchScore.toFixed(0) + '%';
+      document.getElementById('stat-tech').textContent = report.breakdown.technicalScore.toFixed(0) + '%';
+      document.getElementById('stat-apt').textContent = report.breakdown.aptitudeScore.toFixed(0) + '%';
+      document.getElementById('stat-proj').textContent = report.breakdown.projectsCertScore.toFixed(0) + '%';
+
+      const gapList = document.getElementById('skill-gap-list');
+      const allSkills = [
+        ...report.matchedSkills.map((s) => ({ ...s, matched: true })),
+        ...report.missingSkills.map((s) => ({ ...s, matched: false })),
+      ].sort((a, b) => b.weight - a.weight);
+
+      gapList.innerHTML = allSkills.map((s) => `
+        <div class="gap-row">
+          <div class="gap-row-head">
+            <span>${s.name}</span>
+            <span class="status mono" style="color:${s.matched ? 'var(--mint)' : 'var(--coral)'}">${s.matched ? 'MATCHED' : 'GAP · priority ' + s.weight}</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill ${s.matched ? 'matched' : 'missing'}" style="width:${s.matched ? 100 : (s.weight / 5) * 100}%"></div>
+          </div>
+        </div>
+      `).join('') || '<p>No role skill data available.</p>';
+
+      const recList = document.getElementById('recommendations-list');
+      recList.innerHTML = report.recommendations.map((r) => `
+        <div class="rec-item">
+          <div>
+            <div class="rec-type">${r.type.replace('_', ' ')}</div>
+            <div class="rec-title">${r.title}</div>
+            <div class="rec-skill">${r.skill}</div>
+          </div>
+          ${r.resource_url ? `<a href="${r.resource_url}" target="_blank" class="btn btn-ghost" style="padding:8px 14px; font-size:0.82rem;">Open</a>` : ''}
+        </div>
+      `).join('') || '<p>Great work — no major skill gaps for this role!</p>';
+    } catch (err) {
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('error').textContent = err.message;
+      document.getElementById('error').classList.add('show');
+    }
+  })();
+</script>
+</body>
+</html>
+

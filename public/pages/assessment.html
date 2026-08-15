@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assessment — Placement Readiness Platform</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="page">
+  <header class="container navbar">
+    <a href="/pages/dashboard.html" class="brand" style="text-decoration:none;"><span class="brand-mark"></span> Placement Readiness</a>
+    <nav class="nav-links">
+      <span class="timer-badge mono" id="timer">10:00</span>
+      <span class="pill" id="nav-username">···</span>
+      <a href="#" id="logout-link">Log out</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <div class="container" style="max-width:700px;">
+      <span class="eyebrow">Step 3 of 4</span>
+      <h2 id="role-title">Assessment</h2>
+      <p>5 aptitude questions + 5 technical questions for your target role. Answer all to see your Placement Readiness Score.</p>
+
+      <div id="error" class="error-banner"></div>
+
+      <div id="aptitude-section">
+        <h3 style="margin-top:28px;">Aptitude</h3>
+        <div id="aptitude-questions"></div>
+      </div>
+
+      <div id="technical-section">
+        <h3 style="margin-top:28px;">Technical</h3>
+        <div id="technical-questions"></div>
+      </div>
+
+      <button id="submit-btn" class="btn btn-primary btn-block mt-24">Submit assessment</button>
+    </div>
+  </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/app-nav.js"></script>
+<script>
+  const roleId = sessionStorage.getItem('prp_role_id');
+  const resumeId = sessionStorage.getItem('prp_resume_id');
+  if (!roleId || !resumeId) window.location.href = '/pages/select-role.html';
+
+  const aptitudeAnswers = new Map();
+  const technicalAnswers = new Map();
+  let secondsLeft = 600; // 10 minutes
+  let timerId = null;
+
+  function startTimer() {
+    const el = document.getElementById('timer');
+    timerId = setInterval(() => {
+      secondsLeft--;
+      const m = Math.floor(secondsLeft / 60).toString().padStart(2, '0');
+      const s = (secondsLeft % 60).toString().padStart(2, '0');
+      el.textContent = `${m}:${s}`;
+      if (secondsLeft <= 0) {
+        clearInterval(timerId);
+        submitAssessment();
+      }
+    }, 1000);
+  }
+
+  function renderQuestions(containerId, questions, answerMap) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = questions.map((q, i) => `
+      <div class="card q-card">
+        <span class="q-index mono">Q${i + 1} · ${q.difficulty}</span>
+        <p class="q-text">${q.question_text}</p>
+        <div class="option-list" data-qid="${q.id}">
+          ${['A', 'B', 'C', 'D'].map((opt) => `
+            <label class="option" data-opt="${opt}">
+              <input type="radio" name="q-${q.id}" value="${opt}">
+              ${q['option_' + opt.toLowerCase()]}
+            </label>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('.option-list').forEach((list) => {
+      const qid = Number(list.dataset.qid);
+      list.querySelectorAll('.option').forEach((opt) => {
+        opt.addEventListener('click', () => {
+          list.querySelectorAll('.option').forEach((o) => o.classList.remove('selected'));
+          opt.classList.add('selected');
+          opt.querySelector('input').checked = true;
+          answerMap.set(qid, opt.dataset.opt);
+        });
+      });
+    });
+  }
+
+  (async function init() {
+    try {
+      const { roles } = await Api.getRoles();
+      const role = roles.find((r) => String(r.id) === String(roleId));
+      if (role) document.getElementById('role-title').textContent = `Assessment — ${role.title}`;
+
+      const { aptitude, technical } = await Api.getAssessment(roleId);
+      renderQuestions('aptitude-questions', aptitude, aptitudeAnswers);
+      renderQuestions('technical-questions', technical, technicalAnswers);
+      startTimer();
+    } catch (err) {
+      document.getElementById('error').textContent = err.message;
+      document.getElementById('error').classList.add('show');
+    }
+  })();
+
+  document.getElementById('submit-btn').addEventListener('click', submitAssessment);
+async function submitAssessment() {
+
+    clearInterval(timerId);
+
+    const btn = document.getElementById("submit-btn");
+
+    btn.disabled = true;
+
+    btn.textContent = "Generating Report...";
+
+    try {
+
+        const payload = {
+
+            aptitudeAnswers: [...aptitudeAnswers.entries()].map(
+                ([questionId, selectedOption]) => ({
+                    questionId,
+                    selectedOption
+                })
+            ),
+
+            technicalAnswers: [...technicalAnswers.entries()].map(
+                ([questionId, selectedOption]) => ({
+                    questionId,
+                    selectedOption
+                })
+            )
+
+        };
+
+        // Submit assessment
+        const assessment = await Api.submitAssessment(roleId, payload);
+
+        sessionStorage.setItem(
+            "prp_assessment_id",
+            assessment.assessmentId
+        );
+
+        // Generate report
+        const report = await Api.generateReport({
+
+            roleId: Number(roleId),
+
+            resumeId: Number(resumeId),
+
+            assessmentId: Number(assessment.assessmentId)
+
+        });
+
+        // Save report
+        sessionStorage.setItem(
+            "prp_report",
+            JSON.stringify(report)
+        );
+
+        // Open results page
+        window.location.href = "/pages/results.html";
+
+    }
+    catch (err) {
+
+        document.getElementById("error").textContent = err.message;
+        document.getElementById("error").classList.add("show");
+
+        btn.disabled = false;
+        btn.textContent = "Submit assessment";
+
+    }
+
+}
+ 
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Placement Readiness Platform — Know exactly where you stand</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="page">
+  <header class="container navbar">
+    <div class="brand"><span class="brand-mark"></span> Placement Readiness</div>
+    <nav class="nav-links">
+      <a href="/index.html" class="active">Home</a>
+      <a href="/pages/login.html">Log in</a>
+      <a href="/pages/register.html" class="btn btn-primary" style="padding:8px 16px;">Get started</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <div class="container hero">
+      <div>
+        <span class="eyebrow">Dynamic Skill Gap Prediction</span>
+        <h1>Know exactly where you stand before the recruiter does.</h1>
+        <p class="lede">Upload your resume, pick the role you're targeting, and take a short assessment.
+        We calculate a Placement Readiness Score and hand you a precise list of what to
+        learn next — no guesswork, no generic advice.</p>
+        <div class="hero-actions">
+          <a href="/pages/register.html" class="btn btn-primary">Create your account</a>
+          <a href="/pages/login.html" class="btn btn-ghost">I already have one</a>
+        </div>
+
+        <div class="stack-steps">
+          <div class="step-row">
+            <span class="step-num">1</span>
+            <div class="step-text"><strong>Upload your resume</strong><span>We read your skills, projects and certifications automatically.</span></div>
+          </div>
+          <div class="step-row">
+            <span class="step-num">2</span>
+            <div class="step-text"><strong>Pick a target role</strong><span>Frontend, Backend, Full Stack, Data Analyst, Java Developer, and more.</span></div>
+          </div>
+          <div class="step-row">
+            <span class="step-num">3</span>
+            <div class="step-text"><strong>Take the aptitude + technical test</strong><span>Short, role-specific, no prep needed.</span></div>
+          </div>
+          <div class="step-row">
+            <span class="step-num">4</span>
+            <div class="step-text"><strong>Get your Readiness Score</strong><span>Plus the exact skills, topics and mini-projects to close the gap.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card center">
+        <span class="eyebrow">Sample output</span>
+        <div id="sample-gauge" class="gauge-wrap"></div>
+        <div class="chip-list center" style="justify-content:center">
+          <span class="chip matched">React ✓</span>
+          <span class="chip matched">Git ✓</span>
+          <span class="chip missing">TypeScript</span>
+          <span class="chip missing">System Design</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">Built with HTML, CSS, JavaScript, Node.js, Express.js, MySQL &amp; Python.</footer>
+</div>
+
+<script src="/js/gauge.js"></script>
+<script>
+  renderGauge(document.getElementById('sample-gauge'), 72, { size: 220 });
+</script>
+</body>
+</html>

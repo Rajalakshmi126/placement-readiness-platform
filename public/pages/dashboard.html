@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Placement Readiness Platform</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="page">
+  <header class="container navbar">
+    <a href="/pages/dashboard.html" class="brand" style="text-decoration:none;"><span class="brand-mark"></span> Placement Readiness</a>
+    <nav class="nav-links">
+      <a href="/pages/dashboard.html" class="active">Dashboard</a>
+      <a href="/pages/upload-resume.html">Resume</a>
+      <span class="pill" id="nav-username">···</span>
+      <a href="#" id="logout-link">Log out</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <div class="container">
+      <div class="section-head">
+        <h2>Your readiness overview</h2>
+        <a href="/pages/upload-resume.html" class="btn btn-primary">Run a new assessment</a>
+      </div>
+
+      <div id="empty-state" class="card center hidden">
+        <span class="eyebrow">No reports yet</span>
+        <h3>Let's find out where you stand</h3>
+        <p>Upload your resume and pick a target role to get your first Placement Readiness Score.</p>
+        <a href="/pages/upload-resume.html" class="btn btn-primary">Start now</a>
+      </div>
+
+      <div id="history-wrap" class="hidden">
+        <div class="card">
+          <span class="eyebrow">Most recent</span>
+          <div class="flex-between" style="align-items:flex-start; flex-wrap:wrap; gap:20px;">
+            <div id="latest-gauge" class="gauge-wrap"></div>
+            <div id="latest-meta" style="flex:1; min-width:220px;"></div>
+          </div>
+        </div>
+
+        <div class="card mt-24">
+          <span class="eyebrow">History</span>
+          <table style="width:100%; border-collapse:collapse; margin-top:10px;">
+            <thead>
+              <tr style="text-align:left; font-size:0.78rem; color:var(--text-faint); text-transform:uppercase;">
+                <th style="padding:8px 0;">Role</th>
+                <th>Score</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="history-rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">Placement Readiness Platform</footer>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/gauge.js"></script>
+<script src="/js/app-nav.js"></script>
+<script>
+  (async function loadDashboard() {
+    try {
+      const { reports } = await Api.getReportHistory();
+      if (!reports || reports.length === 0) {
+        document.getElementById('empty-state').classList.remove('hidden');
+        return;
+      }
+      document.getElementById('history-wrap').classList.remove('hidden');
+
+      const latest = reports[0];
+      renderGauge(document.getElementById('latest-gauge'), Number(latest.readiness_score), { size: 200 });
+      document.getElementById('latest-meta').innerHTML = `
+        <h3 style="margin-bottom:6px;">${latest.role_title}</h3>
+        <p>Generated ${new Date(latest.generated_at).toLocaleDateString()}</p>
+        <a href="/pages/select-role.html" class="btn btn-ghost">Assess a different role</a>
+      `;
+
+      const rowsEl = document.getElementById('history-rows');
+      rowsEl.innerHTML = reports.map((r) => `
+        <tr style="border-top:1px solid var(--border); font-size:0.9rem;">
+          <td style="padding:10px 0;">${r.role_title}</td>
+          <td class="mono">${Number(r.readiness_score).toFixed(1)}</td>
+          <td style="color:var(--text-dim);">${new Date(r.generated_at).toLocaleDateString()}</td>
+        </tr>
+      `).join('');
+    } catch (err) {
+      document.getElementById('empty-state').classList.remove('hidden');
+    }
+  })();
+</script>
+</body>
+</html>

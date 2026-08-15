@@ -1,0 +1,7 @@
+node_modules/
+.env
+uploads/resumes/*
+!uploads/resumes/.gitkeep
+*.log
+temp/
+database/placement_readiness_db.sql

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Choose target role — Placement Readiness Platform</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="page">
+  <header class="container navbar">
+    <a href="/pages/dashboard.html" class="brand" style="text-decoration:none;"><span class="brand-mark"></span> Placement Readiness</a>
+    <nav class="nav-links">
+      <a href="/pages/dashboard.html">Dashboard</a>
+      <span class="pill" id="nav-username">···</span>
+      <a href="#" id="logout-link">Log out</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <div class="container" style="max-width:760px;">
+      <span class="eyebrow">Step 2 of 4</span>
+      <h2>Which role are you targeting?</h2>
+      <p>We'll compare your resume against the skills recruiters expect for this role, and generate a matching aptitude + technical test.</p>
+
+      <div id="error" class="error-banner"></div>
+      <div class="role-grid" id="role-grid"></div>
+
+      <button id="continue-btn" class="btn btn-primary mt-24" disabled>Continue to assessment</button>
+    </div>
+  </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/app-nav.js"></script>
+<script>
+  const grid = document.getElementById('role-grid');
+  const continueBtn = document.getElementById('continue-btn');
+  const errorEl = document.getElementById('error');
+  let selectedRoleId = null;
+
+  (async function loadRoles() {
+    if (!sessionStorage.getItem('prp_resume_id')) {
+      window.location.href = '/pages/upload-resume.html';
+      return;
+    }
+    try {
+      const { roles } = await Api.getRoles();
+      grid.innerHTML = roles.map((r) => `
+        <div class="role-card" data-id="${r.id}" tabindex="0">
+          <h3>${r.title}</h3>
+          <p>${r.description || ''}</p>
+        </div>
+      `).join('');
+
+      grid.querySelectorAll('.role-card').forEach((card) => {
+        card.addEventListener('click', () => selectRole(card));
+        card.addEventListener('keypress', (e) => { if (e.key === 'Enter') selectRole(card); });
+      });
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.classList.add('show');
+    }
+  })();
+
+  function selectRole(card) {
+    grid.querySelectorAll('.role-card').forEach((c) => c.classList.remove('selected'));
+    card.classList.add('selected');
+    selectedRoleId = card.dataset.id;
+    continueBtn.disabled = false;
+  }
+
+  continueBtn.addEventListener('click', () => {
+    sessionStorage.setItem('prp_role_id', selectedRoleId);
+    window.location.href = '/pages/assessment.html';
+  });
+</script>
+</body>
+</html>

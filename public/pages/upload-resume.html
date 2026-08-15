@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upload resume — Placement Readiness Platform</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="page">
+
+<header class="container navbar">
+    <a href="/pages/dashboard.html" class="brand" style="text-decoration:none;">
+        <span class="brand-mark"></span>
+        Placement Readiness
+    </a>
+
+    <nav class="nav-links">
+        <a href="/pages/dashboard.html">Dashboard</a>
+        <a href="/pages/upload-resume.html" class="active">Resume</a>
+        <span class="pill" id="nav-username">···</span>
+        <a href="#" id="logout-link">Log out</a>
+    </nav>
+</header>
+
+<main class="main">
+
+<div class="container" style="max-width:640px;">
+
+<span class="eyebrow">Step 1 of 4</span>
+
+<h2>Upload your resume</h2>
+
+<p>
+PDF or TXT, up to 5MB. We'll scan it for skills, projects and certifications.
+</p>
+
+<div id="error" class="error-banner"></div>
+
+<div class="card">
+
+<div class="dropzone" id="dropzone">
+
+<div class="icon">📄</div>
+
+<p>
+<strong style="color:var(--text)">Click to choose a file</strong>
+or drag it here
+</p>
+
+<input
+type="file"
+id="file-input"
+accept=".pdf,.txt"
+style="display:none;"
+>
+
+</div>
+
+<p id="file-name"
+class="field-hint center hidden"
+style="margin-top:15px;">
+</p>
+
+<button
+id="upload-btn"
+class="btn btn-primary btn-block mt-24"
+disabled>
+
+Analyze Resume
+
+</button>
+
+</div>
+
+<div id="results-card"
+class="card mt-24 hidden">
+
+<span class="eyebrow">
+Detected from your resume
+</span>
+
+<div class="stat-grid">
+
+<div class="stat-box">
+<div class="label">Skills Found</div>
+<div class="value" id="skills-count">0</div>
+</div>
+
+<div class="stat-box">
+<div class="label">Projects</div>
+<div class="value" id="projects-count">0</div>
+</div>
+
+<div class="stat-box">
+<div class="label">Certifications</div>
+<div class="value" id="certs-count">0</div>
+</div>
+
+</div>
+
+<div
+id="skills-chips"
+class="chip-list"
+style="margin-top:20px;">
+</div>
+
+<a
+href="/pages/select-role.html"
+class="btn btn-primary btn-block mt-24">
+
+Continue — choose target role
+
+</a>
+
+</div>
+
+</div>
+
+</main>
+
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/app-nav.js"></script>
+
+<script>
+
+const dropzone = document.getElementById("dropzone");
+const fileInput = document.getElementById("file-input");
+const uploadBtn = document.getElementById("upload-btn");
+const fileName = document.getElementById("file-name");
+const error = document.getElementById("error");
+
+let selectedFile = null;
+
+dropzone.onclick = () => fileInput.click();
+
+fileInput.onchange = () => {
+    if(fileInput.files.length){
+        setFile(fileInput.files[0]);
+    }
+};
+
+dropzone.addEventListener("dragover",(e)=>{
+    e.preventDefault();
+    dropzone.classList.add("dragover");
+});
+
+dropzone.addEventListener("dragleave",()=>{
+    dropzone.classList.remove("dragover");
+});
+
+dropzone.addEventListener("drop",(e)=>{
+    e.preventDefault();
+    dropzone.classList.remove("dragover");
+
+    if(e.dataTransfer.files.length){
+        setFile(e.dataTransfer.files[0]);
+    }
+});
+
+function setFile(file){
+
+    selectedFile=file;
+
+    fileName.classList.remove("hidden");
+    fileName.textContent="Selected: "+file.name;
+
+    uploadBtn.disabled=false;
+
+}
+
+uploadBtn.onclick = async ()=>{
+
+    if(!selectedFile) return;
+
+    uploadBtn.disabled=true;
+    uploadBtn.innerText="Analyzing...";
+
+    error.classList.remove("show");
+
+    try{
+
+        const formData=new FormData();
+
+        formData.append("resume",selectedFile);
+
+        const result=await Api.uploadResume(formData);
+
+        sessionStorage.setItem("prp_resume_id",result.resumeId);
+
+        document.getElementById("skills-count").innerText=result.detectedSkills.length;
+        document.getElementById("projects-count").innerText=result.projectsCount;
+        document.getElementById("certs-count").innerText=result.certificationsCount;
+
+        const skillsContainer=document.getElementById("skills-chips");
+
+        if(result.detectedSkills.length===0){
+
+            skillsContainer.innerHTML=
+            '<span class="field-hint">No skills detected.</span>';
+
+        }else{
+
+            skillsContainer.innerHTML=result.detectedSkills.map(skill=>{
+
+                if(typeof skill==="string"){
+
+                    return `<span class="chip matched">${skill}</span>`;
+
+                }
+
+                return `
+                <span class="chip matched">
+                    ${skill.name}
+                    <small style="opacity:.7;">
+                        (${Math.round(skill.confidence*100)}%)
+                    </small>
+                </span>
+                `;
+
+            }).join("");
+
+        }
+
+        document
+        .getElementById("results-card")
+        .classList.remove("hidden");
+
+    }
+    catch(err){
+
+        error.textContent=err.message;
+        error.classList.add("show");
+
+    }
+
+    uploadBtn.disabled=false;
+    uploadBtn.innerText="Re-analyze";
+
+};
+
+</script>
+
+</body>
+</html>

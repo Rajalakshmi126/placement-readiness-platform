@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Recommended Job Openings
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="/css/style.css"
+    >
+
+    <style>
+
+        body {
+            background: #0b0d18;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #9ca3af;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 15px;
+
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: #151a30;
+            border: 1px solid #273152;
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        .summary-card span {
+            display: block;
+            color: #8d96b5;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .summary-card strong {
+            font-size: 25px;
+        }
+
+        .job-list {
+            display: grid;
+            gap: 18px;
+        }
+
+        .job-card {
+            background: #151a30;
+            border: 1px solid #293453;
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .job-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .company {
+            color: #f6a623;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .job-title {
+            font-size: 21px;
+            margin: 6px 0;
+        }
+
+        .location {
+            color: #a8b0c5;
+        }
+
+        .match {
+            min-width: 100px;
+            text-align: center;
+            border-radius: 12px;
+            padding: 12px;
+            background: #10251e;
+            border: 1px solid #28795d;
+        }
+
+        .match-number {
+            font-size: 25px;
+            font-weight: bold;
+            color: #41d99b;
+        }
+
+        .match-label {
+            font-size: 11px;
+            color: #91a79e;
+        }
+
+        .skills {
+            margin-top: 20px;
+        }
+
+        .skills-title {
+            color: #aeb6ce;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .skill {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            margin: 3px;
+            font-size: 12px;
+        }
+
+        .matched {
+            background: #123a2c;
+            color: #55e5a7;
+            border: 1px solid #237453;
+        }
+
+        .missing {
+            background: #3a2525;
+            color: #ff9b9b;
+            border: 1px solid #704040;
+        }
+
+        .job-footer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .verified {
+            color: #58d89f;
+            font-size: 13px;
+        }
+
+        .apply-btn {
+            background: #f6a623;
+            color: #111;
+            text-decoration: none;
+            padding: 11px 18px;
+            border-radius: 9px;
+            font-weight: bold;
+        }
+
+        .apply-btn:hover {
+            opacity: 0.9;
+        }
+
+        .loading,
+        .empty,
+        .error {
+            text-align: center;
+            padding: 50px;
+            color: #9ca3af;
+        }
+
+        @media (max-width: 700px) {
+
+            .summary {
+                grid-template-columns: 1fr;
+            }
+
+            .job-top {
+                flex-direction: column;
+            }
+
+            .match {
+                width: fit-content;
+            }
+
+            .job-footer {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+
+        <h1>
+            Recommended Job Openings
+        </h1>
+
+        <p id="roleText">
+            Finding openings matching your profile...
+        </p>
+
+    </div>
+
+    <div
+        class="summary"
+        id="summary"
+    ></div>
+
+    <div
+        class="job-list"
+        id="jobList"
+    >
+
+        <div class="loading">
+            Checking verified openings...
+        </div>
+
+    </div>
+
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/job-openings.js"></script>
+
+</body>
+</html>
