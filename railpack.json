@@ -1,0 +1,11 @@
+﻿{
+  "$schema": "https://schema.railpack.com",
+  "provider": "node",
+  "packages": {
+    "node": "24.18.1",
+    "python": "3.11"
+  },
+  "deploy": {
+    "startCommand": "node server.js"
+  }
+}
